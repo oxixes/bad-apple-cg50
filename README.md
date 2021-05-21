@@ -6,6 +6,8 @@ Also, I was lent this calculator for a year, and since I had to return it in a m
 
 This is the example [video](https://youtu.be/27PPHqZrRkE  "video").
 
+To play the video, download the add-in (`BadApple.g3a`) and the video itself (`video.bin`), which is available in the releases tab and place both files on the root of the storage memory of the calculator. Note: it should also work on the fx-CG20 or even the fx-CG10 but I haven't tested it myself.
+
 Before playing the video, you can select if you want to show the frame counter, and if you want the video to be played in real time (skipping frames if it lags), or play all frames regardless of the playback speed.
 
 If you press the MENU key in the middle of the playback, or if the video ended, you'll have to exit the add-in by going to another one and entering back again to start playing the video again.
