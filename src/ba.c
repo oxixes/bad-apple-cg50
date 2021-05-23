@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "fastlz.h"
+
 #define CREATEMODE_FILE 1
 #define CREATEMODE_FOLDER 5
 #define READ 0
@@ -126,7 +128,7 @@ int main(void) {
     clearDisplay();
 
     Bfile_StrToName_ncpy(pFile, (char*) FILE_PATH, sizeof(FILE_PATH));
-    hFile = Bfile_OpenFile_OS(pFile, READWRITE, 0);
+    hFile = Bfile_OpenFile_OS(pFile, READ, 0);
 
     if (hFile < 0) {
       locate_OS(1, 1);
@@ -186,13 +188,10 @@ int main(void) {
           }
 
           for (int i = 0; i < framesToSkip; i++) {
+            currentByte += 2;
             unsigned short frameRepLength;
             Bfile_ReadFile_OS(hFile, &frameRepLength, 2, currentByte);
-            currentByte += 2 + (2 * frameRepLength);
-
-            unsigned char frameValLength;
-            Bfile_ReadFile_OS(hFile, &frameValLength, 1, currentByte);
-            currentByte += 1 + (4 * frameValLength);
+            currentByte += 3 + frameRepLength;
           }
           f += framesToSkip;
         }
@@ -200,41 +199,46 @@ int main(void) {
 
       int ticks = RTC_GetTicks();
 
-      unsigned short frameRepLength;
-      Bfile_ReadFile_OS(hFile, &frameRepLength, 2, currentByte);
+      unsigned short originalFrameRepLength;
+      Bfile_ReadFile_OS(hFile, &originalFrameRepLength, 2, currentByte);
       currentByte += 2;
 
-      unsigned short frameReps[frameRepLength];
-      for (int i = 0; i < frameRepLength; i++) {
-        Bfile_ReadFile_OS(hFile, &frameReps[i], 2, -1);
-        currentByte += 2;
+      unsigned short compressedFrameRepLength;
+      Bfile_ReadFile_OS(hFile, &compressedFrameRepLength, 2, -1);
+      currentByte += 2;
+
+      unsigned short frameReps[originalFrameRepLength / 2];
+      unsigned char compressedFrameReps[compressedFrameRepLength];
+      Bfile_ReadFile_OS(hFile, compressedFrameReps, compressedFrameRepLength, -1);
+      currentByte += compressedFrameRepLength;
+
+      if (originalFrameRepLength <= 16) {
+        for (int i = 0; i < originalFrameRepLength / 2; i++) {
+          frameReps[i] = 0;
+          frameReps[i] |= (compressedFrameReps[i * 2] << 8);
+          frameReps[i] |= (compressedFrameReps[(i * 2) + 1]);
+        }
+      } else {
+        fastlz_decompress(compressedFrameReps, compressedFrameRepLength, frameReps, originalFrameRepLength);
       }
 
-      unsigned char frameValLength;
-      Bfile_ReadFile_OS(hFile, &frameValLength, 1, -1);
+      unsigned char actualColor;
+      Bfile_ReadFile_OS(hFile, &actualColor, 1, -1);
       currentByte += 1;
 
-      unsigned int frameValues[frameValLength];
-      for (int i = 0; i < frameValLength; i++) {
-        Bfile_ReadFile_OS(hFile, &frameValues[i], 4, -1);
-        currentByte += 4;
-      }
-
-      unsigned char frameBoolValues[frameRepLength];
-      for (int i = 0; i < frameValLength; i++) {
-        char shouldBreak = false;
-        for (int j = 0; j < 32; j++) {
-          if ((i * 32) + j >= frameRepLength) {
-            break;
-            shouldBreak = true;
-          }
-          frameBoolValues[(i * 32) + j] = (frameValues[i] >> j) & 1;
+      unsigned char frameBoolValues[originalFrameRepLength / 2];
+      for (int i = 0; i < originalFrameRepLength / 2; i++) {
+        frameBoolValues[i] = actualColor;
+        if (actualColor) {
+          actualColor = 0;
+        } else {
+          actualColor = 1;
         }
-        if (shouldBreak) break;
       }
 
       unsigned short *p = GetVRAMAddress();
       int pixCounter = 0;
+
       for (int i = 0; i < 216 * 384; i++) {
         int x = i % 384;
         int y = i / 384;
