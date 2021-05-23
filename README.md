@@ -16,11 +16,17 @@ If you press the MENU key in the middle of the playback, or if the video ended, 
 I used the PrizmSDK (0.5.1), you can just place the contents of this repository inside a project folder in the SDK and run the `make.bat` file.
 
 ## Compressing a different video
-You can just run the `compress.py` script with the first argument being the video. Requires OpenCV 2 and numpy. It will create a `data.bin` file, which you can just transfer to the calculator and change its name to `video.bin`.
+You can just run the `compress.py` (in the `compression` folder) script with the first argument being the video. Requires OpenCV 2 and numpy. It will create a `data.bin` file.
 ```
 Usage: compress.py [video]
 ```
 Note: video must have a resolution lower than or equal to 384x216 px, as well as less than 60 fps.
+
+Then, you need to run the compress program with the binary file that the python script created, to compile it just run `make` if you're on Windows with gcc and g++ in PATH. An executable for Windows is also provided in the releases tab.
+```
+Usage: compress.exe [video]
+```
+After that, the program will create a `data.c.bin`, which you can rename to `video.bin` and transfer to your calculator.
 
 ## Errors
 If the calculator says "Error reading video" when opening the add-in, make sure you place the binary file (`video.bin`) in the root of the storage memory of the calculator, and that it has that name.
