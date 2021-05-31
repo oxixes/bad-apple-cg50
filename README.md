@@ -31,4 +31,4 @@ After that, the program will create a `data.c.bin`, which you can rename to `vid
 ## Errors
 If the calculator says "Error reading video" when opening the add-in, make sure you place the binary file (`video.bin`) in the root of the storage memory of the calculator, and that it has that name.
 
-If the calculator says "Invalid video", the resolution is higher that the screen of the calculator, the fps are above 60, or the scale at which the video is going to be played is haigher than 99.
+If the calculator says "Invalid video", the resolution is higher that the screen of the calculator, the fps are above 60, or the scale at which the video is going to be played is higher than 99.
